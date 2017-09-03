@@ -8,6 +8,34 @@ extern crate regex;
 
 use regex::Regex;
 
+/// Escapes a string so it will be interpreted as a single word by the UNIX Bourne shell.
+///
+/// If the input string is empty, this function returns an empty quoted string.
+///
+/// # Examples
+///
+/// ```
+/// # extern crate shellwords;
+/// # use shellwords::escape;
+/// # fn main() {
+/// assert_eq!(escape("special's.txt"), "special\\'s.txt".to_string());
+/// # }
+/// ```
+pub fn escape(input: &str) -> String {
+    lazy_static! {
+        static ref ESCAPE_PATTERN: Regex = Regex::new(r"([^A-Za-z0-9_\-.,:/@\n])").unwrap();
+        static ref LINE_FEED: Regex = Regex::new(r"\n").unwrap();
+    }
+
+    if input.len() == 0 {
+        return "''".to_owned();
+    }
+
+    let output = &ESCAPE_PATTERN.replace_all(input, "\\$1");
+
+    LINE_FEED.replace_all(output, "'\n'").to_string()
+}
+
 /// Splits a string into a vector of words in the same way the UNIX Bourne shell does.
 ///
 /// This function does not behave like a full command line parser. Only single quotes, double
@@ -90,7 +118,7 @@ pub struct MismatchedQuotes;
 
 #[cfg(test)]
 mod tests {
-    use super::{MismatchedQuotes, split};
+    use super::{MismatchedQuotes, escape, split};
 
     #[test]
     fn nothing_special() {
@@ -135,5 +163,45 @@ mod tests {
     #[test]
     fn trailing_whitespace() {
         assert_eq!(split("a b c d ").unwrap(), ["a", "b", "c", "d"]);
+    }
+
+    #[test]
+    fn empty_escape() {
+        assert_eq!(escape(""), "''");
+    }
+
+    #[test]
+    fn full_escape() {
+        assert_eq!(escape("foo '\"' bar"), "foo\\ \\'\\\"\\'\\ bar");
+    }
+
+    #[test]
+    fn escape_whitespace() {
+        let empty = "".to_owned();
+        let space = " ".to_owned();
+        let newline = "\n".to_owned();
+        let tab = "\t".to_owned();
+
+        let tokens = [
+            empty.clone(),
+            space.clone(),
+            space.clone() + &space,
+            newline.clone(),
+            newline.clone() + &newline,
+            tab.clone(),
+            tab.clone() + &tab,
+            empty.clone(),
+            space + &newline + &tab,
+            empty,
+        ];
+
+        for token in tokens.iter() {
+            assert_eq!(vec![token.as_str()], split(escape(token.as_str()).as_str()).unwrap());
+        }
+    }
+
+    #[test]
+    fn escape_multibyte() {
+        assert_eq!(escape("あい"), "\\あ\\い");
     }
 }
