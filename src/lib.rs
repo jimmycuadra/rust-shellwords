@@ -36,6 +36,27 @@ pub fn escape(input: &str) -> String {
     LINE_FEED.replace_all(output, "'\n'").to_string()
 }
 
+/// Builds a command line string from a list of arguments.
+///
+/// The arguments are combined into a single string with each word separated by a space. Each
+/// individual word is escaped as necessary via `escape`.
+///
+/// # Examples
+///
+/// ```
+/// # extern crate shellwords;
+/// # use shellwords::join;
+/// # fn main() {
+/// let args = ["There's", "a", "time", "and", "place", "for", "everything"];
+/// assert_eq!(join(&args), "There\\'s a time and place for everything");
+/// # }
+/// ```
+pub fn join(args: &[&str]) -> String {
+    let escaped: Vec<String> = args.iter().map(|arg| escape(arg)).collect();
+
+    escaped.join(" ")
+}
+
 /// Splits a string into a vector of words in the same way the UNIX Bourne shell does.
 ///
 /// This function does not behave like a full command line parser. Only single quotes, double
@@ -118,7 +139,7 @@ pub struct MismatchedQuotes;
 
 #[cfg(test)]
 mod tests {
-    use super::{MismatchedQuotes, escape, split};
+    use super::{MismatchedQuotes, escape, join, split};
 
     #[test]
     fn nothing_special() {
@@ -176,13 +197,13 @@ mod tests {
     }
 
     #[test]
-    fn escape_whitespace() {
+    fn escape_and_join_whitespace() {
         let empty = "".to_owned();
         let space = " ".to_owned();
         let newline = "\n".to_owned();
         let tab = "\t".to_owned();
 
-        let tokens = [
+        let tokens = vec![
             empty.clone(),
             space.clone(),
             space.clone() + &space,
@@ -198,6 +219,9 @@ mod tests {
         for token in tokens.iter() {
             assert_eq!(vec![token.as_str()], split(escape(token.as_str()).as_str()).unwrap());
         }
+
+        let borrowed_tokens: Vec<&str> = tokens.iter().map(|token| &token[..]).collect();
+        assert_eq!(tokens, split(join(borrowed_tokens.as_slice()).as_str()).unwrap());
     }
 
     #[test]
