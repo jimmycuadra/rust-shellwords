@@ -2,8 +2,8 @@
 //! UNIX Bourne shell.
 
 #[deny(missing_debug_implementations, missing_docs, warnings)]
-
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 extern crate regex;
 
 use regex::Regex;
@@ -117,7 +117,8 @@ pub fn split(input: &str) -> Result<Vec<String>, MismatchedQuotes> {
         } else if let Some(single_quoted_word) = capture.get(2) {
             field.push_str(single_quoted_word.as_str());
         } else if let Some(double_quoted_word) = capture.get(3) {
-            field.push_str(&METACHAR_PATTERN.replace_all(double_quoted_word.as_str(), "$1"));
+            field.push_str(&METACHAR_PATTERN
+                .replace_all(double_quoted_word.as_str(), "$1"));
         } else if let Some(escape) = capture.get(4) {
             field.push_str(&ESCAPE_PATTERN.replace_all(escape.as_str(), "$1"));
         } else if capture.get(5).is_some() {
@@ -139,7 +140,7 @@ pub struct MismatchedQuotes;
 
 #[cfg(test)]
 mod tests {
-    use super::{MismatchedQuotes, escape, join, split};
+    use super::{escape, join, split, MismatchedQuotes};
 
     #[test]
     fn nothing_special() {
@@ -217,11 +218,17 @@ mod tests {
         ];
 
         for token in tokens.iter() {
-            assert_eq!(vec![token.as_str()], split(escape(token.as_str()).as_str()).unwrap());
+            assert_eq!(
+                vec![token.as_str()],
+                split(escape(token.as_str()).as_str()).unwrap()
+            );
         }
 
         let borrowed_tokens: Vec<&str> = tokens.iter().map(|token| &token[..]).collect();
-        assert_eq!(tokens, split(join(borrowed_tokens.as_slice()).as_str()).unwrap());
+        assert_eq!(
+            tokens,
+            split(join(borrowed_tokens.as_slice()).as_str()).unwrap()
+        );
     }
 
     #[test]
