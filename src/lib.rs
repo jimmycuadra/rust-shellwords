@@ -100,7 +100,7 @@ pub fn join(args: &[&str]) -> String {
 pub fn split(input: &str) -> Result<Vec<String>, MismatchedQuotes> {
     lazy_static! {
         static ref MAIN_PATTERN: Regex = Regex::new(
-            r#"(?m:\s*(?:([^\s\\'"]+)|'([^'])*'|"((?:[^"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?)"#
+            r#"(?m:\s*(?:([^\s\\'"]+)|'([^']*)'|"((?:[^"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?)"#
         ).unwrap();
 
         static ref ESCAPE_PATTERN: Regex = Regex::new(r#"\\(.)"#).unwrap();
@@ -234,5 +234,10 @@ mod tests {
     #[test]
     fn escape_multibyte() {
         assert_eq!(escape("あい"), "\\あ\\い");
+    }
+
+    #[test]
+    fn percent_signs() {
+        assert_eq!(split("abc '%foo bar%'").unwrap(), ["abc", "%foo bar%"]);
     }
 }
