@@ -2,10 +2,8 @@
 //! UNIX Bourne shell.
 
 #[deny(missing_debug_implementations, missing_docs, warnings)]
-#[macro_use]
-extern crate lazy_static;
-extern crate regex;
 
+use lazy_static::lazy_static;
 use regex::Regex;
 
 /// Escapes a string so it will be interpreted as a single word by the UNIX Bourne shell.
