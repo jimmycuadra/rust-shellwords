@@ -133,6 +133,14 @@ pub fn split(input: &str) -> Result<Vec<String>, MismatchedQuotes> {
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct MismatchedQuotes;
 
+impl std::fmt::Display for MismatchedQuotes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Mismatched quotes")
+    }
+}
+
+impl std::error::Error for MismatchedQuotes {}
+
 #[cfg(test)]
 mod tests {
     use super::{escape, join, split, MismatchedQuotes};
