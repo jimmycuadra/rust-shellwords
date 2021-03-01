@@ -243,4 +243,9 @@ mod tests {
     fn percent_signs() {
         assert_eq!(split("abc '%foo bar%'").unwrap(), ["abc", "%foo bar%"]);
     }
+
+    #[test]
+    fn escaped_newline() {
+        assert_eq!(split("\"foo \\\nbar\"").unwrap(), ["foo bar"]);
+    }
 }
