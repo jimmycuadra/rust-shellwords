@@ -97,11 +97,12 @@ pub fn join(args: &[&str]) -> String {
 pub fn split(input: &str) -> Result<Vec<String>, MismatchedQuotes> {
     lazy_static! {
         static ref MAIN_PATTERN: Regex = Regex::new(
-            r#"(?m:\s*(?:([^\s\\'"]+)|'([^']*)'|"((?:[^"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?)"#
+            r#"(?m:\s*(?:([^\s\\'"]+)|'([^']*)'|"((?s:[^"\\]|\\.)*)"|(\\.?)|(\S))(\s|\z)?)"#
         )
         .unwrap();
         static ref ESCAPE_PATTERN: Regex = Regex::new(r#"\\(.)"#).unwrap();
-        static ref METACHAR_PATTERN: Regex = Regex::new(r#"\\([$`"\\\n])"#).unwrap();
+        static ref METACHAR_PATTERN: Regex = Regex::new(r#"\\([$`"\\])"#).unwrap();
+        static ref ESCAPE_NL_PATTERN: Regex = Regex::new(r#"\\\n"#).unwrap();
     }
 
     let mut words = Vec::new();
@@ -113,7 +114,8 @@ pub fn split(input: &str) -> Result<Vec<String>, MismatchedQuotes> {
         } else if let Some(single_quoted_word) = capture.get(2) {
             field.push_str(single_quoted_word.as_str());
         } else if let Some(double_quoted_word) = capture.get(3) {
-            field.push_str(&METACHAR_PATTERN.replace_all(double_quoted_word.as_str(), "$1"));
+            let nl_escaped = &ESCAPE_NL_PATTERN.replace_all(double_quoted_word.as_str(), "");
+            field.push_str(&METACHAR_PATTERN.replace_all(nl_escaped, "$1"));
         } else if let Some(escape) = capture.get(4) {
             field.push_str(&ESCAPE_PATTERN.replace_all(escape.as_str(), "$1"));
         } else if capture.get(5).is_some() {
