@@ -20,7 +20,7 @@ use regex::Regex;
 /// ```
 pub fn escape(input: &str) -> String {
     lazy_static! {
-        static ref ESCAPE_PATTERN: Regex = Regex::new(r"([^A-Za-z0-9_\-.,:/@\n])").unwrap();
+        static ref ESCAPE_PATTERN: Regex = Regex::new(r"([^\p{L}0-9_\-.,:/@\n])").unwrap();
         static ref LINE_FEED: Regex = Regex::new(r"\n").unwrap();
     }
 
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn escape_multibyte() {
-        assert_eq!(escape("あい"), "\\あ\\い");
+        assert_eq!(escape("あい"), "あい");
     }
 
     #[test]
